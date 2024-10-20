@@ -12,3 +12,4 @@ target_link_libraries(MD5Downloaded PUBLIC
     compiler_flags
 )
 
+add_subdirectory(ut)

@@ -1,9 +1,9 @@
-#include <MD5Downloaded/md5.hpp>
+#include <MD5Modified/md5.hpp>
 #include <string>
 #include <cmath>
 #include <cstring>
 
-namespace MD5Downloaded
+namespace MD5Modified
 {
 
 
@@ -140,4 +140,4 @@ std::string GetMD5String(std::string msg) {
 	return str;
 }
 
-} // namespace MD5Downloaded
+} // namespace MD5Modified
