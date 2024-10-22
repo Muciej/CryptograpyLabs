@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
+#include <cstdint>
 
 namespace MD5Modified
 {
 
-std::string GetMD5String(std::string msg);
+std::uint32_t* MD5Hash(std::string msg);
 
 } // namespace MD5Modified

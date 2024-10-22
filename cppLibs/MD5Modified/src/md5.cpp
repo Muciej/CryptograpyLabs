@@ -2,114 +2,112 @@
 #include <string>
 #include <cmath>
 #include <cstring>
+#include <cstdint>
+
+#include <iostream>
 
 namespace MD5Modified
 {
 
+using WordTable = std::uint32_t[4];
 
-typedef union uwb {
-	unsigned w;
-	unsigned char b[4];
-} MD5union;
+const std::int16_t M[] = { 1, 5, 3, 7 };
+const std::int16_t O[] = { 0, 1, 5, 0 };
+const std::int16_t rot0[] = { 7, 12, 17, 22 };
+const std::int16_t rot1[] = { 5, 9, 14, 20 };
+const std::int16_t rot2[] = { 4, 11, 16, 23 };
+const std::int16_t rot3[] = { 6, 10, 15, 21 };
+const std::int16_t *rots[] = { rot0, rot1, rot2, rot3 };
+const WordTable h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
 
-typedef unsigned DigestArray[4];
-
-unsigned func0(unsigned abcd[]){
-	return (abcd[1] & abcd[2]) | (~abcd[1] & abcd[3]);
-}
-
-unsigned func1(unsigned abcd[]){
-	return (abcd[3] & abcd[1]) | (~abcd[3] & abcd[2]);
-}
-
-unsigned func2(unsigned abcd[]){
-	return  abcd[1] ^ abcd[2] ^ abcd[3];
-}
-
-unsigned func3(unsigned abcd[]){
-	return abcd[2] ^ (abcd[1] | ~abcd[3]);
-}
-
-typedef unsigned(*DgstFctn)(unsigned a[]);
-
-unsigned *calctable(unsigned *k)
+const std::uint32_t calctable[] = 
 {
-	double s, pwr;
-	int i;
+	3614090360, 3905402710, 606105819, 3250441966, 
+	4118548399, 1200080426, 2821735955, 4249261313, 
+	1770035416, 2336552879, 4294925233, 2304563134, 
+	1804603682, 4254626195, 2792965006, 1236535329, 
+	4129170786, 3225465664, 643717713, 3921069994, 
+	3593408605, 38016083, 3634488961, 3889429448, 
+	568446438, 3275163606, 4107603335, 1163531501, 
+	2850285829, 4243563512, 1735328473, 2368359562, 
+	4294588738, 2272392833, 1839030562, 4259657740, 
+	2763975236, 1272893353, 4139469664, 3200236656, 
+	681279174, 3936430074, 3572445317, 76029189, 
+	3654602809, 3873151461, 530742520, 3299628645, 
+	4096336452, 1126891415, 2878612391, 4237533241, 
+	1700485571, 2399980690, 4293915773, 2240044497, 
+	1873313359, 4264355552, 2734768916, 1309151649, 
+	4149444226, 3174756917, 718787259, 3951481745
+};
 
-	pwr = std::pow(2.0, 32);
-	for (i = 0; i<64; i++) {
-		s = std::fabs(std::sin(1.0 + i));
-		k[i] = (unsigned)(s * pwr);
+std::uint32_t func(int it, std::uint32_t abcd[4])
+{
+	switch (it)
+	{
+	case 0:
+		return (abcd[1] & abcd[2]) | (~abcd[1] & abcd[3]);
+		break;
+	case 1:
+		return (abcd[3] & abcd[1]) | (~abcd[3] & abcd[2]);
+		break;
+	case 2:
+		return  abcd[1] ^ abcd[2] ^ abcd[3];
+		break;
+	case 3:
+		return abcd[2] ^ (abcd[1] | ~abcd[3]);
+		break;
 	}
-	return k;
+	return 0;
 }
 
-unsigned rol(unsigned r, short N)
+std::uint32_t rol(std::uint32_t r, std::int16_t N)
 {
-	unsigned  mask1 = (1 << N) - 1;
+	std::uint32_t  mask1 = (1 << N) - 1;
 	return ((r >> (32 - N)) & mask1) | ((r << N) & ~mask1);
 }
 
-unsigned* MD5Hash(std::string msg)
+std::uint32_t* MD5Hash(std::string msg)
 {
-	int mlen = msg.length();
-	static DigestArray h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
-	static DgstFctn ff[] = { &func0, &func1, &func2, &func3 };
-	static short M[] = { 1, 5, 3, 7 };
-	static short O[] = { 0, 1, 5, 0 };
-	static short rot0[] = { 7, 12, 17, 22 };
-	static short rot1[] = { 5, 9, 14, 20 };
-	static short rot2[] = { 4, 11, 16, 23 };
-	static short rot3[] = { 6, 10, 15, 21 };
-	static short *rots[] = { rot0, rot1, rot2, rot3 };
-	static unsigned kspace[64];
-	static unsigned *k;
-
-	static DigestArray h;
-	DigestArray abcd;
-	DgstFctn fctn;
-	short m, o, g;
-	unsigned f;
-	short *rotn;
+	std::size_t mlen = msg.length();
+	static WordTable h;
+	WordTable abcd;
+	std::int16_t m, o, g;
+	std::uint32_t f;
+	const std::int16_t* rotn;
 	union {
-		unsigned w[16];
+		std::uint32_t w[16];
 		char     b[64];
 	}mm;
 	int os = 0;
 	int grp, grps, q, p;
-	unsigned char *msg2;
+	std::uint8_t *msg2;
 
-	if (k == NULL) k = calctable(kspace);
-
-	for (q = 0; q<4; q++) h[q] = h0[q];
-
+	for (q = 0; q < 4; q++) h[q] = h0[q];
 	{
 		grps = 1 + (mlen + 8) / 64;
-		msg2 = (unsigned char*)malloc(64 * grps);
+		msg2 = (std::uint8_t*)malloc(64 * grps);
 		memcpy(msg2, msg.c_str(), mlen);
-		msg2[mlen] = (unsigned char)0x80;
+		msg2[mlen] = (std::uint8_t)0x80;
 		q = mlen + 1;
 		while (q < 64 * grps){ msg2[q] = 0; q++; }
 		{
-			MD5union u;
-			u.w = 8 * mlen;
+			std::uint32_t u;
+			u = 8 * mlen;
 			q -= 8;
-			memcpy(msg2 + q, &u.w, 4);
+			memcpy(msg2 + q, &u, 4);
 		}
 	}
 
-	for (grp = 0; grp<grps; grp++)
+	for (grp = 0; grp < grps; grp++)
 	{
 		memcpy(mm.b, msg2 + os, 64);
 		for (q = 0; q<4; q++) abcd[q] = h[q];
 		for (p = 0; p<4; p++) {
-			fctn = ff[p];
 			rotn = rots[p];
 			m = M[p]; o = O[p];
 			for (q = 0; q<16; q++) {
 				g = (m*q + o) % 16;
-				f = abcd[1] + rol(abcd[0] + fctn(abcd) + k[q + 16 * p] + mm.w[g], rotn[q % 4]);
+				f = abcd[1] + rol(abcd[0] + func(p, abcd) + calctable[q + 16 * p] + mm.w[g], rotn[q % 4]);
 
 				abcd[0] = abcd[3];
 				abcd[3] = abcd[2];
@@ -123,21 +121,6 @@ unsigned* MD5Hash(std::string msg)
 	}
 
 	return h;
-}
-
-std::string GetMD5String(std::string msg) {
-	std::string str;
-	int j;
-	unsigned *d = MD5Hash(msg);
-	MD5union u;
-	for (j = 0; j<4; j++){
-		u.w = d[j];
-		char s[9];
-		sprintf(s, "%02x%02x%02x%02x", u.b[0], u.b[1], u.b[2], u.b[3]);
-		str += s;
-	}
-
-	return str;
 }
 
 } // namespace MD5Modified

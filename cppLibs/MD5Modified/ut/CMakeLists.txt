@@ -2,6 +2,7 @@ enable_testing()
 
 set(SOURCES
     crossCheckTest.cpp
+    knownCollisionTest.cpp
 )
 
 add_executable(MD5ModifiedTest ${SOURCES})
