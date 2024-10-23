@@ -4,12 +4,9 @@
 #include <cstring>
 #include <cstdint>
 
-#include <iostream>
-
 namespace MD5Modified
 {
 
-using WordTable = std::uint32_t[4];
 
 const std::int16_t M[] = { 1, 5, 3, 7 };
 const std::int16_t O[] = { 0, 1, 5, 0 };
@@ -18,7 +15,7 @@ const std::int16_t rot1[] = { 5, 9, 14, 20 };
 const std::int16_t rot2[] = { 4, 11, 16, 23 };
 const std::int16_t rot3[] = { 6, 10, 15, 21 };
 const std::int16_t *rots[] = { rot0, rot1, rot2, rot3 };
-const WordTable h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
+const WordTable def_h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
 
 const std::uint32_t calctable[] = 
 {
@@ -40,7 +37,7 @@ const std::uint32_t calctable[] =
 	4149444226, 3174756917, 718787259, 3951481745
 };
 
-std::uint32_t func(int it, std::uint32_t abcd[4])
+constexpr std::uint32_t func(int it, std::uint32_t abcd[4])
 {
 	switch (it)
 	{
@@ -60,16 +57,35 @@ std::uint32_t func(int it, std::uint32_t abcd[4])
 	return 0;
 }
 
-std::uint32_t rol(std::uint32_t r, std::int16_t N)
+constexpr std::uint32_t rol(std::uint32_t r, std::int16_t N)
 {
 	std::uint32_t  mask1 = (1 << N) - 1;
 	return ((r >> (32 - N)) & mask1) | ((r << N) & ~mask1);
 }
 
-std::uint32_t* MD5Hash(std::string msg)
+void MD5HashPadded(std::string msg, WordTable h)
 {
-	std::size_t mlen = msg.length();
-	static WordTable h;
+	const std::size_t mlen = msg.length();
+	const int grps = 1 + (mlen + 8) / 64;
+	std::uint8_t *msg2;
+
+	msg2 = (std::uint8_t*)malloc(64 * grps);
+	memcpy(msg2, msg.c_str(), mlen);
+	msg2[mlen] = (std::uint8_t)0x80;
+	int q = mlen + 1;
+	while (q < 64 * grps){ msg2[q] = 0; q++; }
+	{
+		std::uint32_t u;
+		u = 8 * mlen;
+		q -= 8;
+		memcpy(msg2 + q, &u, 4);
+	}
+
+	MD5HashNonPadded(msg2, h, def_h0, grps);
+}
+
+void MD5HashNonPadded(const std::uint8_t* msg, WordTable h, const WordTable h0, int grps)
+{
 	WordTable abcd;
 	std::int16_t m, o, g;
 	std::uint32_t f;
@@ -79,34 +95,27 @@ std::uint32_t* MD5Hash(std::string msg)
 		char     b[64];
 	}mm;
 	int os = 0;
-	int grp, grps, q, p;
-	std::uint8_t *msg2;
+	int grp;
 
-	for (q = 0; q < 4; q++) h[q] = h0[q];
+	for (int q = 0; q < 4; q++)
 	{
-		grps = 1 + (mlen + 8) / 64;
-		msg2 = (std::uint8_t*)malloc(64 * grps);
-		memcpy(msg2, msg.c_str(), mlen);
-		msg2[mlen] = (std::uint8_t)0x80;
-		q = mlen + 1;
-		while (q < 64 * grps){ msg2[q] = 0; q++; }
-		{
-			std::uint32_t u;
-			u = 8 * mlen;
-			q -= 8;
-			memcpy(msg2 + q, &u, 4);
-		}
+		h[q] = h0[q];
 	}
 
 	for (grp = 0; grp < grps; grp++)
 	{
-		memcpy(mm.b, msg2 + os, 64);
-		for (q = 0; q<4; q++) abcd[q] = h[q];
-		for (p = 0; p<4; p++) {
+		memcpy(mm.b, msg + os, 64);
+		for (int q = 0; q < 4; q++)
+		{
+			abcd[q] = h[q];
+		}
+		for (int p = 0; p < 4; p++)
+		{
 			rotn = rots[p];
 			m = M[p]; o = O[p];
-			for (q = 0; q<16; q++) {
-				g = (m*q + o) % 16;
+			for (int q = 0; q < 16; q++)
+			{
+				g = (m * q + o) % 16;
 				f = abcd[1] + rol(abcd[0] + func(p, abcd) + calctable[q + 16 * p] + mm.w[g], rotn[q % 4]);
 
 				abcd[0] = abcd[3];
@@ -115,12 +124,10 @@ std::uint32_t* MD5Hash(std::string msg)
 				abcd[1] = f;
 			}
 		}
-		for (p = 0; p<4; p++)
+		for (int p = 0; p<4; p++)
 			h[p] += abcd[p];
 		os += 64;
 	}
-
-	return h;
 }
 
 } // namespace MD5Modified

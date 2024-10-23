@@ -1,6 +1,7 @@
 enable_testing()
 
 set(SOURCES
+    helpers.cpp
     crossCheckTest.cpp
     knownCollisionTest.cpp
 )

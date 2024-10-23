@@ -24,7 +24,7 @@ def message_maker(msg: str, name: str, bytes_format: int, inverse_bytes: bool = 
 
 
 if __name__ == '__main__':
-    bytes_format = 32
+    bytes_format = 8
 
     message_maker(
         "02dd31d1 c4eee6c5 069a3d69 5cf9af98 87b5ca2f ab7e4612 3e580440 897ffbb8 "

@@ -4,7 +4,9 @@
 
 namespace MD5Modified
 {
+using WordTable = std::uint32_t[4];
 
-std::uint32_t* MD5Hash(std::string msg);
+void MD5HashPadded(std::string msg, WordTable h);
+void MD5HashNonPadded(const std::uint8_t* msg, WordTable h, const WordTable h0, int grps = 8);
 
 } // namespace MD5Modified
