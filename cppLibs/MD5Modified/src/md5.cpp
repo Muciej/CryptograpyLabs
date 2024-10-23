@@ -63,71 +63,34 @@ constexpr std::uint32_t rol(std::uint32_t r, std::int16_t N)
 	return ((r >> (32 - N)) & mask1) | ((r << N) & ~mask1);
 }
 
-void MD5HashPadded(std::string msg, WordTable h)
-{
-	const std::size_t mlen = msg.length();
-	const int grps = 1 + (mlen + 8) / 64;
-	std::uint8_t *msg2;
-
-	msg2 = (std::uint8_t*)malloc(64 * grps);
-	memcpy(msg2, msg.c_str(), mlen);
-	msg2[mlen] = (std::uint8_t)0x80;
-	int q = mlen + 1;
-	while (q < 64 * grps){ msg2[q] = 0; q++; }
-	{
-		std::uint32_t u;
-		u = 8 * mlen;
-		q -= 8;
-		memcpy(msg2 + q, &u, 4);
-	}
-
-	MD5HashNonPadded(msg2, h, def_h0, grps);
-}
-
-void MD5HashNonPadded(const std::uint8_t* msg, WordTable h, const WordTable h0, int grps)
+void MD5HashNonPadded(const WordTable h0, const std::uint32_t* msg, WordTable h)
 {
 	WordTable abcd;
 	std::int16_t m, o, g;
 	std::uint32_t f;
 	const std::int16_t* rotn;
-	union {
-		std::uint32_t w[16];
-		char     b[64];
-	}mm;
-	int os = 0;
-	int grp;
 
-	for (int q = 0; q < 4; q++)
+	for (int i = 0; i < 4; i++)
 	{
-		h[q] = h0[q];
+		abcd[i] = h[i] = h0[i];
 	}
-
-	for (grp = 0; grp < grps; grp++)
+	for (int i = 0; i < 4; i++)
 	{
-		memcpy(mm.b, msg + os, 64);
-		for (int q = 0; q < 4; q++)
+		rotn = rots[i];
+		m = M[i]; o = O[i];
+		for (int q = 0; q < 16; q++)
 		{
-			abcd[q] = h[q];
-		}
-		for (int p = 0; p < 4; p++)
-		{
-			rotn = rots[p];
-			m = M[p]; o = O[p];
-			for (int q = 0; q < 16; q++)
-			{
-				g = (m * q + o) % 16;
-				f = abcd[1] + rol(abcd[0] + func(p, abcd) + calctable[q + 16 * p] + mm.w[g], rotn[q % 4]);
+			g = (m * q + o) % 16;
+			f = abcd[1] + rol(abcd[0] + func(i, abcd) + calctable[q + 16 * i] + msg[g], rotn[q % 4]);
 
-				abcd[0] = abcd[3];
-				abcd[3] = abcd[2];
-				abcd[2] = abcd[1];
-				abcd[1] = f;
-			}
+			abcd[0] = abcd[3];
+			abcd[3] = abcd[2];
+			abcd[2] = abcd[1];
+			abcd[1] = f;
 		}
-		for (int p = 0; p<4; p++)
-			h[p] += abcd[p];
-		os += 64;
 	}
+	for (int i = 0; i<4; i++)
+		h[i] += abcd[i];
 }
 
 } // namespace MD5Modified

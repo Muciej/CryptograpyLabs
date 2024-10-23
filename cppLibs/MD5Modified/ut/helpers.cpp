@@ -6,7 +6,7 @@
 namespace testHelpers
 {
 
-bool compareWords(Word word1, Word word2)
+bool compareWords(const Word word1, const Word word2)
 {
     auto areEqual = true;
     for(int i = 0; i<4; i++)
@@ -19,7 +19,7 @@ bool compareWords(Word word1, Word word2)
     return areEqual;
 }
 
-void printWord(Word w)
+void printWord(const Word w)
 {
     for(int i = 0; i<4; i++)
     {
