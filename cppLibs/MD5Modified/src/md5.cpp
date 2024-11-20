@@ -8,8 +8,8 @@ namespace MD5Modified
 {
 
 
-const std::int16_t M[] = { 1, 5, 3, 7 };
-const std::int16_t O[] = { 0, 1, 5, 0 };
+const std::int16_t M[] = { 1, 5, 3, 7 };		// to calculate input visiting sequence
+const std::int16_t O[] = { 0, 1, 5, 0 };		// input_ind = m * it + q
 const std::int16_t rot0[] = { 7, 12, 17, 22 };
 const std::int16_t rot1[] = { 5, 9, 14, 20 };
 const std::int16_t rot2[] = { 4, 11, 16, 23 };
@@ -17,7 +17,7 @@ const std::int16_t rot3[] = { 6, 10, 15, 21 };
 const std::int16_t *rots[] = { rot0, rot1, rot2, rot3 };
 const WordTable def_h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
 
-const std::uint32_t calctable[] = 
+const std::uint32_t constTable[] =
 {
 	3614090360, 3905402710, 606105819, 3250441966, 
 	4118548399, 1200080426, 2821735955, 4249261313, 
@@ -65,32 +65,34 @@ constexpr std::uint32_t rol(std::uint32_t r, std::int16_t N)
 
 void MD5HashNonPadded(const WordTable h0, const std::uint32_t* msg, WordTable h)
 {
-	WordTable abcd;
-	std::int16_t m, o, g;
+	WordTable state;
+	std::int16_t m, o, inputInd;
 	std::uint32_t f;
 	const std::int16_t* rotn;
 
 	for (int i = 0; i < 4; i++)
 	{
-		abcd[i] = h[i] = h0[i];
+		state[i] = h[i] = h0[i];			// init with start vector
 	}
-	for (int i = 0; i < 4; i++)
+	for (int mainIteration = 0; mainIteration < 4; mainIteration++)
 	{
-		rotn = rots[i];
-		m = M[i]; o = O[i];
+		rotn = rots[mainIteration];
+		m = M[mainIteration]; o = O[mainIteration];
 		for (int q = 0; q < 16; q++)
 		{
-			g = (m * q + o) % 16;
-			f = abcd[1] + rol(abcd[0] + func(i, abcd) + calctable[q + 16 * i] + msg[g], rotn[q % 4]);
+			inputInd = (m * q + o) % 16;
+			f = state[1] + rol(state[0] + func(mainIteration, state) + constTable[q + 16 * mainIteration] + msg[inputInd], rotn[q % 4]);
 
-			abcd[0] = abcd[3];
-			abcd[3] = abcd[2];
-			abcd[2] = abcd[1];
-			abcd[1] = f;
+			state[0] = state[3];
+			state[3] = state[2];
+			state[2] = state[1];
+			state[1] = f;
 		}
 	}
 	for (int i = 0; i<4; i++)
-		h[i] += abcd[i];
+	{
+		h[i] += state[i];				// init state + state after iterations
+	}
 }
 
 } // namespace MD5Modified
