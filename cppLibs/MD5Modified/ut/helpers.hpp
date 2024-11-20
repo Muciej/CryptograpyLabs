@@ -6,12 +6,7 @@
 namespace testHelpers
 {
 
-using Word = std::uint32_t[4];
-
 const auto repeats = 10000;
-
-bool compareWords(const Word word1, const Word word2);
-void printWord(const Word w);
 
 template <typename F, typename... Args>
 int64_t measureTime(F&& func, Args&&... args)
