@@ -26,7 +26,7 @@ TEST(MD5Utils, messageDifferenceFunctionKnownPairs)
 
     utils::getMessageDifference(SecondPair::msg_1_prime, SecondPair::msg_1, difference);
 
-    EXPECT_TRUE(utils::compareMessages(difference, Constants::deltaM0));
+    EXPECT_TRUE(utils::compareMessages(difference, Constants::deltaM1));
     // utils::printMessage(difference);
     // utils::printMessage(Constants::deltaM1);
 }
