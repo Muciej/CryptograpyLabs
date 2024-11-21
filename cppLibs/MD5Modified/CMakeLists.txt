@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 add_library(MD5Modified STATIC
     src/md5.cpp
     src/md5Utils.cpp
+    src/md5MessageModification.cpp
 )
 
 target_include_directories(MD5Modified PUBLIC
