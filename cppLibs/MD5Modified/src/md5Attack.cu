@@ -39,7 +39,7 @@ namespace MD5Modified
         return isGood;
     }
 
-    __device__ std::uint32_t func(int it, std::uint32_t abcd[4])
+    __device__ inline std::uint32_t func(int it, std::uint32_t abcd[4])
     {
         switch (it)
         {
@@ -59,12 +59,12 @@ namespace MD5Modified
         return 0;
     }
 
-    __device__ std::uint32_t rol(std::uint32_t r, std::uint8_t N)
+    __device__ inline std::uint32_t rol(std::uint32_t r, std::uint8_t N)
     {
         return (r << N) | (r >> (32 - N));
     }
 
-    __device__ std::uint32_t unrol(std::uint32_t r, std::uint8_t N)
+    __device__ inline std::uint32_t unrol(std::uint32_t r, std::uint8_t N)
     {
         return (r >> N) | (r << (32 - N));
     }
@@ -366,9 +366,9 @@ namespace MD5Modified
 
         *isDifferentialFound = 0;
         *isCollisionFound = 0;
-        attackFirstPart<<<17, 128>>>(msg0, msg0Prime, result, resultPrime, isDifferentialFound);
+        attackFirstPart<<<32, 256>>>(msg0, msg0Prime, result, resultPrime, isDifferentialFound);
         cudaDeviceSynchronize();
-        attackSecondPart<<<17, 128>>>(msg1, msg1Prime, result, resultPrime, isCollisionFound);
+        attackSecondPart<<<32, 256>>>(msg1, msg1Prime, result, resultPrime, isCollisionFound);
         cudaDeviceSynchronize();
     }
 
@@ -378,7 +378,7 @@ namespace MD5Modified
         cudaMallocManaged(&isCollision, sizeof(int));
 
         *isCollision = 0;
-        attackOnlySecondPart<<<17, 128>>>(msg1, msg1Prime, msg0, msg0Prime, isCollision);
+        attackOnlySecondPart<<<32, 256>>>(msg1, msg1Prime, msg0, msg0Prime, isCollision);
         cudaDeviceSynchronize();
     }
 
