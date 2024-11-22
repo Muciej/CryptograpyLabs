@@ -214,7 +214,7 @@ namespace MD5Modified
         uint32_t msg0PrimeLocal[16];
 
         // calculate MD5 with message modification for round one
-        while(*isDifferentialFound <= 0)
+        while(*isDifferentialFound <= 1)
         {
             // random message selection
             for(auto& word : msg0Local)
@@ -294,6 +294,63 @@ namespace MD5Modified
         }
     }
 
+    __global__ void attackOnlySecondPart(uint32_t* msg1, uint32_t* msg1Prime, const uint32_t* msg0, const uint32_t* msg0Prime, int* isCollisionFound)
+    {
+        // initialize CUDA random generator
+        const uint32_t idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+        curandState generator{};
+        curand_init(idx, idx, 0, &generator);
+
+        // init variables
+        uint32_t msg1Local[16];
+        uint32_t msg1PrimeLocal[16];
+        uint32_t result[4];
+        uint32_t resultPrime[4];
+
+        uint32_t IV[4];
+        uint32_t IVPrime[4];
+        md5(Constants::def_h0, msg0, IV);
+        md5(Constants::def_h0, msg0Prime, IVPrime);
+
+        // calculate MD5 with message modification for round one
+        while(*isCollisionFound <= 0)
+        {
+            // random message selection
+            for(auto& word : msg1Local)
+            {
+                word = curand(&generator);
+            }
+
+            md5SecondPart(IV, msg1Local, result);
+
+            for(int i = 0; i < 16; i++)
+            {
+                msg1PrimeLocal[i] = msg1Local[i] + Constants::deltaM1[i];
+            }
+
+            md5(IVPrime, msg1PrimeLocal, resultPrime);
+
+            bool areEqual = true;
+            for (int i = 0; i < 4; i++) {
+                if (result[i] != resultPrime[i]) {
+                    areEqual = false;
+                }
+            }
+
+            if(areEqual)
+            {
+                atomicAdd(isCollisionFound, 1);
+            }
+        }
+
+        for(int i = 0; i < 16; i++)
+        {
+            msg1[i] = msg1Local[i];
+            msg1Prime[i] = msg1PrimeLocal[i];
+        }
+    }
+
     void fullAttack(uint32_t* msg0, uint32_t* msg0Prime, uint32_t* msg1, uint32_t* msg1Prime)
     {
         uint32_t* result;
@@ -307,13 +364,22 @@ namespace MD5Modified
         cudaMallocManaged(&isCollisionFound, sizeof(int));
         cudaMallocManaged(&isDifferentialFound, sizeof(int));
 
-        // run attack in a loop
-        while(*isCollisionFound <= 0)
-        {
-            *isDifferentialFound = 0;
-            attackFirstPart<<<32, 256>>>(msg0, msg0Prime, msg1, msg1Prime, isDifferentialFound);
-            attackSecondPart<<<32, 256>>>(msg1, msg1Prime, result, resultPrime, isCollisionFound);
-        }
+        *isDifferentialFound = 0;
+        *isCollisionFound = 0;
+        attackFirstPart<<<17, 128>>>(msg0, msg0Prime, result, resultPrime, isDifferentialFound);
+        cudaDeviceSynchronize();
+        attackSecondPart<<<17, 128>>>(msg1, msg1Prime, result, resultPrime, isCollisionFound);
+        cudaDeviceSynchronize();
+    }
+
+    void onlySecondPart(const uint32_t* msg0, const uint32_t* msg0Prime, uint32_t* msg1, uint32_t* msg1Prime)
+    {
+        int* isCollision;
+        cudaMallocManaged(&isCollision, sizeof(int));
+
+        *isCollision = 0;
+        attackOnlySecondPart<<<17, 128>>>(msg1, msg1Prime, msg0, msg0Prime, isCollision);
+        cudaDeviceSynchronize();
     }
 
 } // namespace MD5Modified
