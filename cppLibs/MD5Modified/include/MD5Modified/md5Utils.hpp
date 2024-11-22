@@ -4,8 +4,7 @@
 namespace MD5Modified
 {
 
-const int wordLen = 4;
-using WordTable = std::uint32_t[wordLen];
+using WordTable = std::uint32_t[4];
 using std::uint32_t;
 
 namespace utils

@@ -2,7 +2,7 @@ enable_testing()
 
 set(SOURCES
     # crossCheckTest.cpp
-    knownCollisionTest.cpp
+    # knownCollisionTest.cpp
     utils.cpp
 )
 

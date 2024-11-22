@@ -6,16 +6,16 @@ using WordTable = std::uint32_t[4];
 namespace MD5Modified::Constants
 {
 
-const std::int16_t M[] = { 1, 5, 3, 7 };		// to calculate input visiting sequence
-const std::int16_t O[] = { 0, 1, 5, 0 };		// input_ind = m * it + q
-const std::uint8_t rot0[] = { 7, 12, 17, 22 };
-const std::uint8_t rot1[] = { 5, 9, 14, 20 };
-const std::uint8_t rot2[] = { 4, 11, 16, 23 };
-const std::uint8_t rot3[] = { 6, 10, 15, 21 };
-const std::uint8_t *rots[] = { rot0, rot1, rot2, rot3 };
-const WordTable def_h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
+__device__ const std::int16_t M[] = { 1, 5, 3, 7 };		// to calculate input visiting sequence
+__device__ const std::int16_t O[] = { 0, 1, 5, 0 };		// input_ind = m * it + q
+__device__ const std::uint8_t rot0[] = { 7, 12, 17, 22 };
+__device__ const std::uint8_t rot1[] = { 5, 9, 14, 20 };
+__device__ const std::uint8_t rot2[] = { 4, 11, 16, 23 };
+__device__ const std::uint8_t rot3[] = { 6, 10, 15, 21 };
+__device__ const std::uint8_t *rots[] = { rot0, rot1, rot2, rot3 };
+__device__ const WordTable def_h0 = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476 };
 
-const std::uint32_t constTable[] =
+__device__ const std::uint32_t constTable[] =
 {
 	3614090360, 3905402710, 606105819, 3250441966, 
 	4118548399, 1200080426, 2821735955, 4249261313, 
@@ -35,19 +35,19 @@ const std::uint32_t constTable[] =
 	4149444226, 3174756917, 718787259, 3951481745
 };
 
-const uint32_t deltaM0[16] = {
+__device__ const uint32_t deltaM0[16] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x80000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00008000,
     0x00000000, 0x00000000, 0x80000000, 0x00000000};
     
-const uint32_t deltaM1[16] = {
+__device__ const uint32_t deltaM1[16] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x80000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0xffff8000,
     0x00000000, 0x00000000, 0x80000000, 0x00000000};
 
-const uint32_t deltaH1[4] = {
+__device__ const uint32_t deltaH1[4] = {
     0x80000000, 0x82000000, 0x82000000, 0x82000000};
 
 } // namesapce MD5Modified::Constants

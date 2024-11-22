@@ -7,7 +7,7 @@ namespace MD5Modified::utils
 
 void getWordDifference(const WordTable a, const WordTable b, WordTable& difference)
 {
-    for(int i = 0; i < wordLen; i++)
+    for(int i = 0; i < 4; i++)
     {
         difference[i] = a[i] - b[i];
     }
